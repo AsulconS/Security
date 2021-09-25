@@ -1,0 +1,178 @@
+<html>
+    <head>
+        <script>
+            function freqs(msg){
+                var dict = {};
+                for (var i = 0 ; i < msg.length ; ++i ){
+                    dict[msg[i]] += 1;
+                }
+
+                return dict;
+            }
+            function preprocess27(msg){
+                var lower = "abcdefghijklmnñopqrstuvwxyzáéíóú";
+                var dict27 = "ABCDEFGHIJKLMN"+String.fromCharCode(209)+"OPQRSTUVWXYZAEIOU";
+                var temp = msg;
+                new_msg = "";
+                for (var i = 0 ; i < msg.length ; ++i ){
+                    if (lower.indexOf(msg[i]) != -1){
+                        temp = temp.substring(0,i) + dict27[lower.indexOf(msg[i])] + temp.substring(i+1,temp.length);
+                    }
+                }
+                
+                for (var i = 0 ; i < temp.length ; ++i ){
+                    if (dict27.indexOf(temp[i]) != -1){
+                        new_msg += temp[i];
+                    }
+                }
+                return new_msg;
+            } 
+            function preprocess191(msg){
+                new_msg = "";
+                for ( var i = 0 ; i < msg.length ; ++i){
+                    if ( (msg.charCodeAt(i) >= 33 && msg.charCodeAt(i) <= 127)
+                            || (msg.charCodeAt(i) >= 160 && msg.charCodeAt(i) <= 255  )){
+                        new_msg += msg[i];
+                    }
+                }
+                return new_msg;
+            }
+            function vignere(){
+                var dict27 = "ABCDEFGHIJKLMN"+String.fromCharCode(209)+"OPQRSTUVWXYZ";
+                var dict191 = ""
+                for ( let i = 33 ; i <= 127 ; i++)
+                    dict191+=String.fromCharCode(i);
+                for ( let i = 160 ; i <= 255 ; i++)
+                    dict191+=String.fromCharCode(i);
+
+                var msgcifrado = "";
+
+                var select = document.getElementById("module");
+                var module = select.options[select.selectedIndex].value;
+                var key = document.getElementById("key").value;
+                var message = document.getElementById("message").value;
+                var auto = document.getElementById("auto");
+
+                var counter = 0;
+                while (key.length < message.length ){
+                    if(!auto.checked)
+                        key += key[counter];
+                    else
+                        key += message[counter];
+                    ++counter;
+                }
+                
+                if (module == "27"){
+                    message = preprocess27(message);
+                    key = preprocess27(key);
+
+                    for( var i = 0 ; i < message.length ; ++i){
+                        var sum = dict27.indexOf(message[i])+dict27.indexOf(key[i]);
+                        msgcifrado += dict27[sum%dict27.length];
+                    }
+                    document.getElementById("response").value = msgcifrado;
+                }
+                if (module == "191"){
+                    message = preprocess191(message);
+                    key = preprocess191(key);
+                    for( var i = 0 ; i < message.length ; ++i){
+                        var sum = dict191.indexOf(message[i])+dict191.indexOf(key[i]);
+                        msgcifrado += dict191[sum%dict191.length];
+                    }
+                    document.getElementById("response").value = msgcifrado;
+                }
+            }
+
+            function vignereDecrypt(){
+
+                var dict27 = "ABCDEFGHIJKLMN"+String.fromCharCode(209)+"OPQRSTUVWXYZ";
+                var dict191 = ""
+                for ( let i = 33 ; i <= 127 ; i++)
+                    dict191+=String.fromCharCode(i);
+                for ( let i = 160 ; i <= 255 ; i++)
+                    dict191+=String.fromCharCode(i);
+
+                var msgcifrado = "";
+
+                var select = document.getElementById("module");
+                var module = select.options[select.selectedIndex].value;
+                var key = document.getElementById("key").value;
+                var message = document.getElementById("message").value;
+                var auto = document.getElementById("auto");
+
+                var counter = 0;
+
+                if (module == "27"){
+                    message = preprocess27(message);
+                    key = preprocess27(key);
+                    console.log(key,message);
+                    for( var i = 0 ; i < message.length ; ++i){
+                        var sum = dict27.indexOf(message[i])-dict27.indexOf(key[i]);
+                        if (sum < 0)
+                            sum = 27 + sum;
+                        msgcifrado += dict27[sum%dict27.length];
+                        if(!auto.checked){
+                            key += key[counter];
+                            ++counter;
+                        }
+                        else
+                            key += dict27[sum%dict27.length];
+                    }
+                    document.getElementById("response").value = msgcifrado;
+                }
+                if (module == "191"){
+                    message = preprocess191(message);
+                    key = preprocess191(key);
+                    for( var i = 0 ; i < message.length ; ++i){
+                        var sum = dict191.indexOf(message[i])-
+                            dict191.indexOf(key[i]);
+                        if (sum < 0)
+                            sum = 191 + sum;
+                        msgcifrado += dict191[sum%dict191.length];
+                        if(!auto.checked){
+                            key += key[counter];
+                            ++counter;
+                        }
+                        else
+                            key += dict191[sum%dict191.length];
+                    }
+                    document.getElementById("response").value = msgcifrado;
+                }
+            }
+        </script>
+    </head>
+    
+    <body>
+        <div style="justify-content: center; width: 100%; text-align: center;">
+            <div >
+                <p>Modulo:</p>
+                <select id="module">
+                    <option>27</option>
+                    <option>191</option>
+                </select>
+            </div>
+            <div>
+                <p>Clave:</p>
+                <input type="text" id="key"/>
+                <input type="checkbox" id="auto"/><label>AutoClave</label>
+                
+            </div>
+            <div>
+                <p>Texto Claro:</p>
+                <textarea rows="6" cols="100"  id="message"></textarea>
+            </div>
+            <div style="padding-top: 5px;">
+                <button onclick="vignere();"> Cifrar</button>
+            </div>
+            <div style="padding-top: 5px;">
+                <button onclick="vignereDecrypt();"> Descifrar</button>
+            </div>
+            <div>
+                <p>Texto Cifrado:</p>
+                <textarea rows="6" cols="100" id="response" readonly></textarea>
+            </div>
+            
+        </div>
+        
+    </body>
+</html>
